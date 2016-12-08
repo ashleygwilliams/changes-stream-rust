@@ -1,0 +1,15 @@
+[package]
+name = "changes-stream"
+description = "couchdb follower"
+version = "0.1.0"
+authors = ["Ashley Williams <ashley666ashley@gmail.com>"]
+license = "MIT"
+
+[dependencies]
+futures = "0.1.6"
+tokio-core = "0.1.1"
+pretty_env_logger = { git = "https://github.com/seanmonstar/pretty-env-logger.git" }
+
+[dependencies.hyper]
+git = "https://github.com/hyperium/hyper.git"
+branch = "tokio"
