@@ -9,4 +9,4 @@ this code works off of the `tokio` branch of hyper to take advantage of new Rust
 cargo run -- <url>
 ```
 
-**NOTE** this does not currently support https, working on integrating TLS into hyper rn.
+NOTE: due to a TLS issue on MacOS and OSX, `https` only works on Linux, currently.
