@@ -1,6 +1,5 @@
 # changes-stream-rust
 
-[![crates.io badge](https://img.shields.io/crates/v/changes-stream.svg)](https://crates.io/crates/changes-stream)
 [![travis badge](https://travis-ci.org/ashleygwilliams/changes-stream-rust.svg?branch=master)](https://travis-ci.org/ashleygwilliams/changes-stream-rust)
 
 
