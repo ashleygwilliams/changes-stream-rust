@@ -8,7 +8,6 @@ license = "MIT"
 [dependencies]
 futures = "0.1.6"
 tokio-core = "0.1.1"
-pretty_env_logger = { git = "https://github.com/seanmonstar/pretty-env-logger.git" }
 
 [dependencies.hyper]
 git = "https://github.com/hyperium/hyper.git"

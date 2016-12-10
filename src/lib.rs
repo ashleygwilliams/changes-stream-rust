@@ -6,9 +6,6 @@ use futures::Future;
 use futures::stream::Stream;
 
 use hyper::Client;
-use hyper::client::Response;
-
-use std::io::{self, Write};
 
 type Event = hyper::Chunk;
 

@@ -20,13 +20,24 @@ changes-stream = { git = "https://github.com/ashleygwilliams/changes-stream-rust
 from [examples/follower.rs](/examples/follower.rs):
 
 ```rust
-let mut changes = ChangesStream::new(url);
+extern crate changes_stream;
+extern crate futures;
 
-changes.on(|change| {
-    io::stdout().write_all(&change);
-});
+use std::io;
+use std::io::Write;
 
-changes.run();
+use changes_stream::ChangesStream;
+
+fn main() {
+    let url = "https://replicate.npmjs.com/_changes".to_string();
+    let mut changes = ChangesStream::new(url);
+
+    changes.on(|change| {
+        io::stdout().write_all(&change).unwrap();
+    });
+
+    changes.run();
+}
 ```
 
 NOTE: due to a TLS issue on MacOS and OSX, `https` only works on Linux, currently.
