@@ -5,7 +5,6 @@ extern crate futures;
 use std::io;
 use std::io::Write;
 
-use futures::stream::Stream;
 use changes_stream::ChangesStream;
 
 use std::env;
@@ -24,7 +23,7 @@ fn main() {
     let mut changes = ChangesStream::new(url);
 
     changes.on(|change| {
-        io::stdout().write_all(&change);
+        io::stdout().write_all(&change).unwrap();
     });
 
     changes.run();
