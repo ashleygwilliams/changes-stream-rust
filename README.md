@@ -4,7 +4,9 @@
 
 
 an implementation of [`changes-stream`](https://github.com/jcrugzz/changes-stream) in Rust.
-this code works off of the `tokio` branch of hyper to take advantage of new Rust Futures.
+this code works off of the [`tokio` branch of hyper] to take advantage of new Rust Futures.
+
+[`tokio` branch of hyper]: https://github.com/hyperium/hyper/tree/tokio
 
 ## usage
 
