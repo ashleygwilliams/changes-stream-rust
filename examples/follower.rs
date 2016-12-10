@@ -24,7 +24,7 @@ fn main() {
     let mut changes = ChangesStream::new(url);
 
     changes.on(|change| {
-      io::stdout().write_all(&change);
+        io::stdout().write_all(&change);
     });
 
     changes.run();
