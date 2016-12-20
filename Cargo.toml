@@ -7,7 +7,7 @@ license = "MIT"
 
 [dependencies]
 futures = "0.1.6"
-tokio-core = "0.1.1"
+tokio-core = "0.1.2"
 
 [dependencies.hyper]
 git = "https://github.com/hyperium/hyper.git"
