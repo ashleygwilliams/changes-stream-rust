@@ -5,7 +5,6 @@ set -o errexit -o nounset
 rev=$(git rev-parse --short HEAD)
 
 cargo doc
-cd target/doc/changes_stream
 
 git init
 git config user.name "Ashley Williams"
