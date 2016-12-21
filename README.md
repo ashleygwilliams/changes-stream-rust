@@ -39,5 +39,3 @@ fn main() {
     changes.run();
 }
 ```
-
-NOTE: due to a TLS issue on MacOS and OSX, `https` only works on Linux, currently.
