@@ -1,3 +1,9 @@
+//! This is documentation for the `changes-stream` crate.
+//!
+//! The `changes-stream` crate is designed to give you a readable stream of 
+//! chunked data, upon which you can register multiple handlers, that are
+//! called on Read of the data chunk.
+
 extern crate futures;
 extern crate hyper;
 extern crate tokio_core;
@@ -9,6 +15,18 @@ use hyper::Client;
 
 type Event = hyper::Chunk;
 
+/// A structure to generate a readable stream on which you can register handlers.
+///
+/// Internally, the `ChangesStream` struct holds 3 members:
+///
+/// | Member      | Type                                  | Notes                                                                   |
+/// |-------------|---------------------------------------|-------------------------------------------------------------------------|
+/// | `db`        | `String`                              | A url pointing to the data you'd like to stream.                        |
+/// | `lp`        | [`tokio_core::reactor::Core`]         | The event loop                                                          |
+/// | `handlers`  | `Vec<F> where F: Fn(&`[`hyper::Chunk`]`)` | A vector of handlers to be called on each Chunk from the Stream on Read |
+///
+/// [`tokio_core::reactor::Core`]: ../tokio_core/reactor/struct.Core.html
+/// [`hyper::Chunk`]: ../hyper/struct.Chunk.html
 pub struct ChangesStream {
     db: hyper::Url,
     lp: tokio_core::reactor::Core,
@@ -16,6 +34,41 @@ pub struct ChangesStream {
 }
 
 impl ChangesStream {
+
+    /// Constructs a new `ChangesStream` struct
+    ///
+    /// Takes a single argument, `db`, which represents the
+    /// url of the data you wish to stream.
+    ///
+    /// Every `ChangesStream` struct is initialized with
+    /// an event loop ([`tokio_core::reactor::Core`]) and an
+    /// empty vector of handlers. See above for more details.
+    ///
+    /// [`tokio_core::reactor::Core`]: ../tokio_core/reactor/struct.Core.html
+    ///
+    /// For example, to create a new `ChangesStream` struct
+    /// for the npmjs registry, you would write:
+    ///
+    /// ```no_run
+    /// # extern crate changes_stream;
+    /// # extern crate futures;
+    /// #
+    /// # use std::io;
+    /// # use std::io::Write;
+    /// #
+    /// # use changes_stream::ChangesStream;
+    /// #
+    /// # fn main() {
+    ///     let url = "https://replicate.npmjs.com/_changes".to_string();
+    ///     let mut changes = ChangesStream::new(url);
+    /// #
+    /// #   changes.on(|change| {
+    /// #       io::stdout().write_all(&change).unwrap();
+    /// #   });
+    /// #
+    /// #   changes.run();
+    /// # }
+    /// ```
     pub fn new(db: String) -> ChangesStream {
         ChangesStream {
             db: db.parse().unwrap(),
@@ -24,10 +77,72 @@ impl ChangesStream {
         }
     }
 
+    /// Registers a handler. A handler is simply a function
+    /// you'd like to call on a chunk from the stream at the
+    /// time the chunk is read.
+    ///
+    /// `.on()` takes a single argument, a closure. The
+    /// closure you pass should take a single [`hyper::Chunk`]
+    /// as an argument.
+    ///
+    /// [`hyper::Chunk`]: ../hyper/struct.Chunk.html
+    ///
+    /// For example, to write the data in a chunk to standard
+    /// out, you would write:
+    ///
+    /// ```no_run
+    /// # extern crate changes_stream;
+    /// # extern crate futures;
+    /// #
+    /// # use std::io;
+    /// # use std::io::Write;
+    /// #
+    /// # use changes_stream::ChangesStream;
+    /// #
+    /// # fn main() {
+    /// #   let url = "https://replicate.npmjs.com/_changes".to_string();
+    /// #   let mut changes = ChangesStream::new(url);
+    /// #
+    ///    changes.on(|change| {
+    ///        io::stdout().write_all(&change).unwrap();
+    ///    });
+    /// #
+    /// #   changes.run();
+    /// # }
+    /// ```
     pub fn on<F: Fn(&Event) + 'static>(&mut self, handler: F) {
         self.handlers.push(Box::new(handler));
     }
 
+    /// Runs the `ChangesStream` struct's event loop, `lp`.
+    ///
+    /// Call this after you have regsitered all handlers using
+    /// `on`.
+    ///
+    /// Takes no arguments.
+    ///
+    /// For example:
+    ///
+    /// ```no_run
+    /// # extern crate changes_stream;
+    /// # extern crate futures;
+    /// #
+    /// # use std::io;
+    /// # use std::io::Write;
+    /// #
+    /// # use changes_stream::ChangesStream;
+    /// #
+    /// # fn main() {
+    /// #   let url = "https://replicate.npmjs.com/_changes".to_string();
+    /// #   let mut changes = ChangesStream::new(url);
+    /// #
+    /// #   changes.on(|change| {
+    /// #       io::stdout().write_all(&change).unwrap();
+    /// #   });
+    /// #
+    ///    changes.run();
+    /// # }
+    /// ```
     pub fn run(mut self) {
         let client = Client::new(&self.lp.handle()).unwrap();
 
