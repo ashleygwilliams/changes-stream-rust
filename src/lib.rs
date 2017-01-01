@@ -144,7 +144,7 @@ impl ChangesStream {
     /// # }
     /// ```
     pub fn run(mut self) {
-        let client = Client::new(&self.lp.handle()).unwrap();
+        let mut client = Client::new(&self.lp.handle()).unwrap();
 
         let handlers = self.handlers;
         self.lp
