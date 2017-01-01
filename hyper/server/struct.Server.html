@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Server` struct in crate `hyper`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Server">
+
+    <title>hyper::server::Server - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>hyper</a>::<wbr><a href='index.html'>server</a></p><script>window.sidebarCurrent = {name: 'Server', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>hyper</a>::<wbr><a href='index.html'>server</a>::<wbr><a class='struct' href=''>Server</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-7676' class='srclink' href='../../src/hyper/server/mod.rs.html#34-40' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Server&lt;A&gt; { /* fields omitted */ }</pre><div class='docblock'><p>A Server that can accept incoming network requests.</p>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl&lt;A:&nbsp;<a class='trait' href='../../hyper/server/trait.Accept.html' title='hyper::server::Accept'>Accept</a>&gt; <a class='struct' href='../../hyper/server/struct.Server.html' title='hyper::server::Server'>Server</a>&lt;A&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a id='src-3070' class='srclink' href='../../src/hyper/server/mod.rs.html#42-83' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.new' class='method'><span id='new.v' class='invisible'><code>fn <a href='#method.new' class='fnname'>new</a>(accepter: A, addr: <a class='enum' href='https://doc.rust-lang.org/nightly/std/net/addr/enum.SocketAddr.html' title='std::net::addr::SocketAddr'>SocketAddr</a>) -&gt; <a class='struct' href='../../hyper/server/struct.Server.html' title='hyper::server::Server'>Server</a>&lt;A&gt;</code></span></h4>
+<div class='docblock'><p>Creates a new Server from a Stream of Ios.</p>
+
+<p>The addr is the socket address the accepter is listening on.</p>
+</div><h4 id='method.keep_alive' class='method'><span id='keep_alive.v' class='invisible'><code>fn <a href='#method.keep_alive' class='fnname'>keep_alive</a>(self, val: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>) -&gt; <a class='struct' href='../../hyper/server/struct.Server.html' title='hyper::server::Server'>Server</a>&lt;A&gt;</code></span></h4>
+<div class='docblock'><p>Enables or disables HTTP keep-alive.</p>
+
+<p>Default is true.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='struct' href='../../hyper/server/struct.Server.html' title='hyper::server::Server'>Server</a>&lt;<a class='struct' href='../../tokio_core/net/tcp/struct.Incoming.html' title='tokio_core::net::tcp::Incoming'>Incoming</a>&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a id='src-3078' class='srclink' href='../../src/hyper/server/mod.rs.html#85-93' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.http' class='method'><span id='http.v' class='invisible'><code>fn <a href='#method.http' class='fnname'>http</a>(addr: &amp;<a class='enum' href='https://doc.rust-lang.org/nightly/std/net/addr/enum.SocketAddr.html' title='std::net::addr::SocketAddr'>SocketAddr</a>, handle: &amp;<a class='struct' href='../../tokio_core/reactor/struct.Handle.html' title='tokio_core::reactor::Handle'>Handle</a>) -&gt; <a class='type' href='../../hyper/error/type.Result.html' title='hyper::error::Result'>Result</a>&lt;<a class='struct' href='../../hyper/server/struct.Server.html' title='hyper::server::Server'>Server</a>&lt;<a class='struct' href='../../tokio_core/net/tcp/struct.Incoming.html' title='tokio_core::net::tcp::Incoming'>Incoming</a>&gt;&gt;</code></span></h4>
+<div class='docblock'><p>Creates a new HTTP server config listening on the provided address.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl&lt;A:&nbsp;<a class='trait' href='../../hyper/server/trait.Accept.html' title='hyper::server::Accept'>Accept</a>&gt; <a class='struct' href='../../hyper/server/struct.Server.html' title='hyper::server::Server'>Server</a>&lt;A&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a id='src-3085' class='srclink' href='../../src/hyper/server/mod.rs.html#110-132' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.handle' class='method'><span id='handle.v' class='invisible'><code>fn <a href='#method.handle' class='fnname'>handle</a>&lt;H&gt;(self, factory: H, handle: &amp;<a class='struct' href='../../tokio_core/reactor/struct.Handle.html' title='tokio_core::reactor::Handle'>Handle</a>) -&gt; <a class='type' href='../../hyper/error/type.Result.html' title='hyper::error::Result'>Result</a>&lt;<a class='enum' href='https://doc.rust-lang.org/nightly/std/net/addr/enum.SocketAddr.html' title='std::net::addr::SocketAddr'>SocketAddr</a>&gt; <span class='where'>where H: <a class='trait' href='../../hyper/server/trait.NewService.html' title='hyper::server::NewService'>NewService</a>&lt;Request=<a class='struct' href='../../hyper/server/struct.Request.html' title='hyper::server::Request'>Request</a>, Response=<a class='struct' href='../../hyper/server/struct.Response.html' title='hyper::server::Response'>Response</a>, Error=<a class='enum' href='../../hyper/error/enum.Error.html' title='hyper::error::Error'>Error</a>&gt; + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a> + 'static</span></code></span></h4>
+<div class='docblock'><p>Binds to a socket and starts handling connections.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='struct' href='../../hyper/server/struct.Server.html' title='hyper::server::Server'>Server</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a id='src-3100' class='srclink' href='../../src/hyper/server/mod.rs.html#134-157' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.standalone' class='method'><span id='standalone.v' class='invisible'><code>fn <a href='#method.standalone' class='fnname'>standalone</a>&lt;F&gt;(closure: F) -&gt; <a class='type' href='../../hyper/error/type.Result.html' title='hyper::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>(</a><a class='struct' href='../../hyper/server/struct.Listening.html' title='hyper::server::Listening'>Listening</a>, <a class='struct' href='../../hyper/server/struct.ServerLoop.html' title='hyper::server::ServerLoop'>ServerLoop</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>)</a>&gt; <span class='where'>where F: <a class='trait' href='https://doc.rust-lang.org/nightly/core/ops/trait.FnOnce.html' title='core::ops::FnOnce'>FnOnce</a>(&amp;<a class='struct' href='../../tokio_core/reactor/struct.Handle.html' title='tokio_core::reactor::Handle'>Handle</a>) -&gt; <a class='type' href='../../hyper/error/type.Result.html' title='hyper::error::Result'>Result</a>&lt;<a class='enum' href='https://doc.rust-lang.org/nightly/std/net/addr/enum.SocketAddr.html' title='std::net::addr::SocketAddr'>SocketAddr</a>&gt;</span></code></span></h4>
+<div class='docblock'><p>Create a server that owns its event loop.</p>
+
+<p>The returned <code>ServerLoop</code> can be used to run the loop forever in the
+thread. The returned <code>Listening</code> can be sent to another thread, and
+used to shutdown the <code>ServerLoop</code>.</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl&lt;A:&nbsp;<a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a>&gt; <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='struct' href='../../hyper/server/struct.Server.html' title='hyper::server::Server'>Server</a>&lt;A&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a id='src-7681' class='srclink' href='../../src/hyper/server/mod.rs.html#33' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.fmt' class='method'><span id='fmt.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter.</p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "hyper";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

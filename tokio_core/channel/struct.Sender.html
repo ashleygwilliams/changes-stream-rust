@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Sender` struct in crate `tokio_core`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Sender">
+
+    <title>tokio_core::channel::Sender - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>tokio_core</a>::<wbr><a href='index.html'>channel</a></p><script>window.sidebarCurrent = {name: 'Sender', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>tokio_core</a>::<wbr><a href='index.html'>channel</a>::<wbr><a class='struct' href=''>Sender</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-565' class='srclink' href='../../src/tokio_core/channel.rs.html#25-27' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Sender&lt;T&gt; { /* fields omitted */ }</pre><div class='stability'><em class='stab deprecated'>Deprecated since 0.1.1<p>: use <code>futures::sync::mpsc</code> instead</p>
+</em></div><div class='docblock'><p>The transmission half of a channel used for sending messages to a receiver.</p>
+
+<p>A <code>Sender</code> can be <code>clone</code>d to have multiple threads or instances sending
+messages to one receiver.</p>
+
+<p>This type is created by the <a href="fn.channel.html"><code>channel</code></a> function.</p>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl&lt;T&gt; <a class='struct' href='../../tokio_core/channel/struct.Sender.html' title='tokio_core::channel::Sender'>Sender</a>&lt;T&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a id='src-577' class='srclink' href='../../src/tokio_core/channel.rs.html#63-85' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.send' class='method'><span id='send.v' class='invisible'><code>fn <a href='#method.send' class='fnname'>send</a>(&amp;self, t: T) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='stability'><em class='stab deprecated'>Deprecated since 0.1.1<p>: use <code>futures::sync::mpsc</code> instead</p>
+</em></div><div class='docblock'><p>Sends a message to the corresponding receiver of this sender.</p>
+
+<p>The message provided will be enqueued on the channel immediately, and
+this function will return immediately. Keep in mind that the
+underlying channel has infinite capacity, and this may not always be
+desired.</p>
+
+<p>If an I/O error happens while sending the message, or if the receiver
+has gone away, then an error will be returned. Note that I/O errors here
+are generally quite abnormal.</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl&lt;T&gt; <a class='trait' href='../../futures/sink/trait.Sink.html' title='futures::sink::Sink'>Sink</a> for <a class='struct' href='../../tokio_core/channel/struct.Sender.html' title='tokio_core::channel::Sender'>Sender</a>&lt;T&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a id='src-585' class='srclink' href='../../src/tokio_core/channel.rs.html#87-98' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='associatedtype.SinkItem' class='type'><span id='SinkItem.t' class='invisible'><code>type <a href='../../futures/sink/trait.Sink.html#associatedtype.SinkItem' class='type'>SinkItem</a> = T</code></span></h4>
+<div class='docblock'><p>The type of value that the sink accepts.</p>
+</div><h4 id='associatedtype.SinkError' class='type'><span id='SinkError.t' class='invisible'><code>type <a href='../../futures/sink/trait.Sink.html#associatedtype.SinkError' class='type'>SinkError</a> = <a class='struct' href='https://doc.rust-lang.org/nightly/std/io/error/struct.Error.html' title='std::io::error::Error'>Error</a></code></span></h4>
+<div class='docblock'><p>The type of value produced by the sink when an error occurs.</p>
+</div><h4 id='method.start_send' class='method'><span id='start_send.v' class='invisible'><code>fn <a href='../../futures/sink/trait.Sink.html#tymethod.start_send' class='fnname'>start_send</a>(&amp;mut self, t: T) -&gt; <a class='type' href='../../futures/poll/type.StartSend.html' title='futures::poll::StartSend'>StartSend</a>&lt;T, <a class='struct' href='https://doc.rust-lang.org/nightly/std/io/error/struct.Error.html' title='std::io::error::Error'>Error</a>&gt;</code></span></h4>
+<div class='docblock'><p>Begin the process of sending a value to the sink. <a href="../../futures/sink/trait.Sink.html#tymethod.start_send">Read more</a></p>
+</div><h4 id='method.poll_complete' class='method'><span id='poll_complete.v' class='invisible'><code>fn <a href='../../futures/sink/trait.Sink.html#tymethod.poll_complete' class='fnname'>poll_complete</a>(&amp;mut self) -&gt; <a class='type' href='../../futures/poll/type.Poll.html' title='futures::poll::Poll'>Poll</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>, <a class='struct' href='https://doc.rust-lang.org/nightly/std/io/error/struct.Error.html' title='std::io::error::Error'>Error</a>&gt;</code></span></h4>
+<div class='docblock'><p>Make progress on all pending requests, and determine whether they have completed. <a href="../../futures/sink/trait.Sink.html#tymethod.poll_complete">Read more</a></p>
+</div><h4 id='method.with' class='method'><span id='with.v' class='invisible'><code>fn <a href='../../futures/sink/trait.Sink.html#method.with' class='fnname'>with</a>&lt;U, F, Fut&gt;(self, f: F) -&gt; <a class='struct' href='../../futures/sink/with/struct.With.html' title='futures::sink::with::With'>With</a>&lt;Self, U, F, Fut&gt; <span class='where'>where F: <a class='trait' href='https://doc.rust-lang.org/nightly/core/ops/trait.FnMut.html' title='core::ops::FnMut'>FnMut</a>(U) -&gt; Fut, Fut: <a class='trait' href='../../futures/future/trait.IntoFuture.html' title='futures::future::IntoFuture'>IntoFuture</a>&lt;Item=Self::<a class='trait' href='../../futures/sink/trait.Sink.html' title='futures::sink::Sink'>SinkItem</a>&gt;, Fut::<a class='trait' href='../../futures/future/trait.IntoFuture.html' title='futures::future::IntoFuture'>Error</a>: <a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.From.html' title='core::convert::From'>From</a>&lt;Self::<a class='trait' href='../../futures/sink/trait.Sink.html' title='futures::sink::Sink'>SinkError</a>&gt;</span></code></span></h4>
+<div class='docblock'><p>Composes a function <em>in front of</em> the sink. <a href="../../futures/sink/trait.Sink.html#method.with">Read more</a></p>
+</div><h4 id='method.buffer' class='method'><span id='buffer.v' class='invisible'><code>fn <a href='../../futures/sink/trait.Sink.html#method.buffer' class='fnname'>buffer</a>(self, amt: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.usize.html'>usize</a>) -&gt; <a class='struct' href='../../futures/sink/buffer/struct.Buffer.html' title='futures::sink::buffer::Buffer'>Buffer</a>&lt;Self&gt;</code></span></h4>
+<div class='docblock'><p>Adds a fixed-size buffer to the current sink. <a href="../../futures/sink/trait.Sink.html#method.buffer">Read more</a></p>
+</div><h4 id='method.flush' class='method'><span id='flush.v' class='invisible'><code>fn <a href='../../futures/sink/trait.Sink.html#method.flush' class='fnname'>flush</a>(self) -&gt; <a class='struct' href='../../futures/sink/flush/struct.Flush.html' title='futures::sink::flush::Flush'>Flush</a>&lt;Self&gt;</code></span></h4>
+<div class='docblock'><p>A future that completes when the sink has finished processing all pending requests. <a href="../../futures/sink/trait.Sink.html#method.flush">Read more</a></p>
+</div><h4 id='method.send-1' class='method'><span id='send.v-1' class='invisible'><code>fn <a href='../../futures/sink/trait.Sink.html#method.send' class='fnname'>send</a>(self, item: Self::<a class='trait' href='../../futures/sink/trait.Sink.html' title='futures::sink::Sink'>SinkItem</a>) -&gt; <a class='struct' href='../../futures/sink/send/struct.Send.html' title='futures::sink::send::Send'>Send</a>&lt;Self&gt;</code></span></h4>
+<div class='docblock'><p>A future that completes after the given item has been fully processed into the sink, including flushing. <a href="../../futures/sink/trait.Sink.html#method.send">Read more</a></p>
+</div><h4 id='method.send_all' class='method'><span id='send_all.v' class='invisible'><code>fn <a href='../../futures/sink/trait.Sink.html#method.send_all' class='fnname'>send_all</a>&lt;S&gt;(self, stream: S) -&gt; <a class='struct' href='../../futures/sink/send_all/struct.SendAll.html' title='futures::sink::send_all::SendAll'>SendAll</a>&lt;Self, S&gt; <span class='where'>where S: <a class='trait' href='../../futures/stream/trait.Stream.html' title='futures::stream::Stream'>Stream</a>&lt;Item=Self::<a class='trait' href='../../futures/sink/trait.Sink.html' title='futures::sink::Sink'>SinkItem</a>&gt;, Self::<a class='trait' href='../../futures/sink/trait.Sink.html' title='futures::sink::Sink'>SinkError</a>: <a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.From.html' title='core::convert::From'>From</a>&lt;S::<a class='trait' href='../../futures/stream/trait.Stream.html' title='futures::stream::Stream'>Error</a>&gt;</span></code></span></h4>
+<div class='docblock'><p>A future that completes after the given stream has been fully processed into the sink, including flushing. <a href="../../futures/sink/trait.Sink.html#method.send_all">Read more</a></p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl&lt;T&gt; <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a> for <a class='struct' href='../../tokio_core/channel/struct.Sender.html' title='tokio_core::channel::Sender'>Sender</a>&lt;T&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a id='src-595' class='srclink' href='../../src/tokio_core/channel.rs.html#100-104' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.clone' class='method'><span id='clone.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone' class='fnname'>clone</a>(&amp;self) -&gt; <a class='struct' href='../../tokio_core/channel/struct.Sender.html' title='tokio_core::channel::Sender'>Sender</a>&lt;T&gt;</code></span></h4>
+<div class='docblock'><p>Returns a copy of the value. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone">Read more</a></p>
+</div><h4 id='method.clone_from' class='method'><span id='clone_from.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from' class='fnname'>clone_from</a>(&amp;mut self, source: &amp;Self)</code><div class='since' title='Stable since Rust version 1.0.0'>1.0.0</div></span></h4>
+<div class='docblock'><p>Performs copy-assignment from <code>source</code>. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from">Read more</a></p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "tokio_core";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

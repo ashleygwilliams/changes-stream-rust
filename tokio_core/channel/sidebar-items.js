@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["channel","Creates a new in-memory channel used for sending data across `Send + 'static` boundaries, frequently threads."]],"struct":[["Receiver","The receiving half of a channel used for processing messages sent by a `Sender`."],["Sender","The transmission half of a channel used for sending messages to a receiver."]]});

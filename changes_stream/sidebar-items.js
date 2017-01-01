@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["ChangesStream","A structure to generate a readable stream on which you can register handlers."]]});
