@@ -4,6 +4,13 @@
 //! chunked data, upon which you can register multiple handlers, that are
 //! called on Read of the data chunk.
 
+#![feature(proc_macro)]
+
+#[macro_use]
+extern crate serde_derive;
+
+extern crate serde;
+extern crate serde_json;
 extern crate futures;
 extern crate hyper;
 extern crate tokio_core;
@@ -13,7 +20,9 @@ use futures::stream::Stream;
 
 use hyper::Client;
 
-type Event = hyper::Chunk;
+mod package;
+
+use package::Package;
 
 /// A structure to generate a readable stream on which you can register handlers.
 ///
@@ -30,7 +39,7 @@ type Event = hyper::Chunk;
 pub struct ChangesStream {
     db: hyper::Url,
     lp: tokio_core::reactor::Core,
-    handlers: Vec<Box<Fn(&Event)>>,
+    handlers: Vec<Box<Fn(&Package)>>,
 }
 
 impl ChangesStream {
@@ -50,11 +59,10 @@ impl ChangesStream {
     /// for the npmjs registry, you would write:
     ///
     /// ```no_run
+    /// # extern crate serde_json;
     /// # extern crate changes_stream;
     /// # extern crate futures;
     /// #
-    /// # use std::io;
-    /// # use std::io::Write;
     /// #
     /// # use changes_stream::ChangesStream;
     /// #
@@ -63,7 +71,8 @@ impl ChangesStream {
     ///     let mut changes = ChangesStream::new(url);
     /// #
     /// #   changes.on(|change| {
-    /// #       io::stdout().write_all(&change).unwrap();
+    /// #       let data = serde_json::to_string(change).unwrap();
+    /// #       println!("{}", data);
     /// #   });
     /// #
     /// #   changes.run();
@@ -91,11 +100,9 @@ impl ChangesStream {
     /// out, you would write:
     ///
     /// ```no_run
+    /// # extern crate serde_json;
     /// # extern crate changes_stream;
     /// # extern crate futures;
-    /// #
-    /// # use std::io;
-    /// # use std::io::Write;
     /// #
     /// # use changes_stream::ChangesStream;
     /// #
@@ -104,13 +111,14 @@ impl ChangesStream {
     /// #   let mut changes = ChangesStream::new(url);
     /// #
     ///    changes.on(|change| {
-    ///        io::stdout().write_all(&change).unwrap();
+    ///       let data = serde_json::to_string(change).unwrap();
+    ///       println!("{}", data);
     ///    });
     /// #
     /// #   changes.run();
     /// # }
     /// ```
-    pub fn on<F: Fn(&Event) + 'static>(&mut self, handler: F) {
+    pub fn on<F: Fn(&Package) + 'static>(&mut self, handler: F) {
         self.handlers.push(Box::new(handler));
     }
 
@@ -124,11 +132,9 @@ impl ChangesStream {
     /// For example:
     ///
     /// ```no_run
+    /// # extern crate serde_json;
     /// # extern crate changes_stream;
     /// # extern crate futures;
-    /// #
-    /// # use std::io;
-    /// # use std::io::Write;
     /// #
     /// # use changes_stream::ChangesStream;
     /// #
@@ -137,7 +143,8 @@ impl ChangesStream {
     /// #   let mut changes = ChangesStream::new(url);
     /// #
     /// #   changes.on(|change| {
-    /// #       io::stdout().write_all(&change).unwrap();
+    /// #       let data = serde_json::to_string(change).unwrap();
+    /// #       println!("{}", data);
     /// #   });
     /// #
     ///    changes.run();
@@ -153,8 +160,8 @@ impl ChangesStream {
 
                 res.body().for_each(move |chunk| {
                     for handler in &handlers {
-                        // let event = serde_json::decode(chunk);
-                        handler(&chunk);
+                        let event: Package = serde_json::from_slice(&chunk).unwrap();
+                        handler(&event);
                     }
                     Ok(())
                 })
