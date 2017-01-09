@@ -8,6 +8,9 @@ license = "MIT"
 [dependencies]
 futures = "0.1.6"
 tokio-core = "0.1.2"
+serde = "0.8"
+serde_json = "0.8"
+serde_derive = "0.8"
 
 [dependencies.hyper]
 git = "https://github.com/hyperium/hyper.git"
