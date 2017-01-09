@@ -4,9 +4,17 @@
 
 
 an implementation of [`changes-stream`](https://github.com/jcrugzz/changes-stream) in Rust.
-this code works off of the [`tokio` branch of hyper] to take advantage of new Rust Futures.
 
-[`tokio` branch of hyper]: https://github.com/hyperium/hyper/tree/tokio
+this code reads in a readable stream from an endpoint and returns each chunk in JSON.
+
+this code works off of the [`tokio` branch] of [`hyper`] to take advantage of new Rust Futures.
+
+[`tokio` branch]: https://github.com/hyperium/hyper/tree/tokio
+[`hyper`]: https:///crates.io/crates/hyper
+
+`changes-stream-rust` only works on nightly because it uses [`serde`].
+
+[`serde`]: https://crates.io/crates/serde
 
 ## usage
 
