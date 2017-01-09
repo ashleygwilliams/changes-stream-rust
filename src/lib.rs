@@ -159,8 +159,8 @@ impl ChangesStream {
                 assert!(res.status().is_success());
 
                 res.body().for_each(move |chunk| {
+                    let event: Package = serde_json::from_slice(&chunk).unwrap();
                     for handler in &handlers {
-                        let event: Package = serde_json::from_slice(&chunk).unwrap();
                         handler(&event);
                     }
                     Ok(())
