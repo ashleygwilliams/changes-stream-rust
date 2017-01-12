@@ -13,6 +13,7 @@ extern crate serde;
 extern crate serde_json;
 extern crate futures;
 extern crate hyper;
+extern crate hyper_tls;
 extern crate tokio_core;
 
 use futures::Future;
@@ -151,7 +152,11 @@ impl ChangesStream {
     /// # }
     /// ```
     pub fn run(mut self) {
-        let mut client = Client::new(&self.lp.handle());
+        let handle = self.lp.handle();
+        let client = Client::configure()
+            //4 is number of threads to use for dns resolution
+            .connector(hyper_tls::HttpsConnector::new(4, &handle))
+            .build(&handle);
 
         let handlers = self.handlers;
         self.lp
