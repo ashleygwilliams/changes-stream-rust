@@ -4,8 +4,6 @@
 //! chunked data, upon which you can register multiple handlers, that are
 //! called on Read of the data chunk.
 
-#![feature(proc_macro)]
-
 #[macro_use]
 extern crate serde_derive;
 
