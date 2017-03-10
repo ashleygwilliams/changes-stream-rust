@@ -197,4 +197,28 @@ impl ChangesStream {
             }))
             .unwrap();
     }
+
+    pub fn run_with(self, mut lp: tokio_core::reactor::Core) {
+        let handle = self.lp.handle();
+        let client = Client::configure()
+            // 4 is number of threads to use for dns resolution
+            .connector(hyper_tls::HttpsConnector::new(4, &handle))
+            .build(&handle);
+
+        let handlers = self.handlers;
+        lp
+            .run(client.get(self.db).and_then(move |res| {
+                assert!(res.status().is_success());
+
+                res.body().for_each(move |chunk| {
+                    let event: Package = serde_json::from_slice(&chunk).unwrap();
+                    for handler in &handlers {
+                        handler(&event);
+                    }
+                    Ok(())
+                })
+            }))
+            .unwrap();
+
+    }
 }
