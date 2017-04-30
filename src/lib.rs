@@ -38,7 +38,7 @@ const PROLOGUE: &'static str = "{\"results\":[";
 /// [`tokio_core::reactor::Core`]: ../tokio_core/reactor/struct.Core.html
 /// [`hyper::Chunk`]: ../hyper/struct.Chunk.html
 pub struct ChangesStream {
-    db: hyper::Url,
+    db: hyper::Uri,
     lp: tokio_core::reactor::Core,
     handlers: Vec<Box<Fn(&Event)>>,
 }
@@ -163,7 +163,7 @@ impl ChangesStream {
                 assert!(res.status().is_success());
 
                 // Buffer up incomplete json lines.
-                let mut buffer: Vec<u8> = vec![];
+                let buffer: Vec<u8> = vec![];
                 let buffer_cell = RefCell::new(buffer);
 
                 res.body().for_each(move |chunk| {
@@ -211,7 +211,7 @@ impl ChangesStream {
                 assert!(res.status().is_success());
 
                 res.body().for_each(move |chunk| {
-                    let event: Package = serde_json::from_slice(&chunk).unwrap();
+                    let event: Event = serde_json::from_slice(&chunk).unwrap();
                     for handler in &handlers {
                         handler(&event);
                     }
