@@ -4,26 +4,15 @@
 //! chunked data, upon which you can register multiple handlers, that are
 //! called on Read of the data chunk.
 
-#[macro_use]
-extern crate serde_derive;
-
-extern crate serde;
-extern crate serde_json;
-extern crate futures;
-extern crate hyper;
-extern crate hyper_tls;
-extern crate tokio_core;
-
-use futures::Future;
-use futures::stream::Stream;
-use hyper::Client;
+use hyper::{body::HttpBody, client::Client, Body};
+use hyper_tls::HttpsConnector;
 use std::cell::RefCell;
 
 mod event;
 use event::Event;
 
-const DELIMITER: &'static str = ",\n";
-const PROLOGUE: &'static str = "{\"results\":[";
+const DELIMITER: &str = ",\n";
+const PROLOGUE: &str = "{\"results\":[";
 
 /// A structure to generate a readable stream on which you can register handlers.
 ///
@@ -39,8 +28,7 @@ const PROLOGUE: &'static str = "{\"results\":[";
 /// [`hyper::Chunk`]: ../hyper/struct.Chunk.html
 pub struct ChangesStream {
     db: hyper::Uri,
-    lp: tokio_core::reactor::Core,
-    handlers: Vec<Box<Fn(&Event)>>,
+    handlers: Vec<Box<dyn Fn(&Event)>>,
 }
 
 impl ChangesStream {
@@ -50,23 +38,16 @@ impl ChangesStream {
     /// url of the data you wish to stream.
     ///
     /// Every `ChangesStream` struct is initialized with
-    /// an event loop ([`tokio_core::reactor::Core`]) and an
-    /// empty vector of handlers. See above for more details.
-    ///
-    /// [`tokio_core::reactor::Core`]: ../tokio_core/reactor/struct.Core.html
+    /// an empty vector of handlers. See above for more details.
     ///
     /// For example, to create a new `ChangesStream` struct
     /// for the npmjs registry, you would write:
     ///
     /// ```no_run
-    /// # extern crate serde_json;
-    /// # extern crate changes_stream;
-    /// # extern crate futures;
-    /// #
-    /// #
     /// # use changes_stream::ChangesStream;
     /// #
-    /// # fn main() {
+    /// # #[tokio::main]
+    /// # async fn main() {
     ///     let url = "https://replicate.npmjs.com/_changes".to_string();
     ///     let mut changes = ChangesStream::new(url);
     /// #
@@ -75,13 +56,12 @@ impl ChangesStream {
     /// #       println!("{}", data);
     /// #   });
     /// #
-    /// #   changes.run();
+    /// #   changes.run().await;
     /// # }
     /// ```
     pub fn new(db: String) -> ChangesStream {
         ChangesStream {
             db: db.parse().unwrap(),
-            lp: tokio_core::reactor::Core::new().unwrap(),
             handlers: vec![],
         }
     }
@@ -100,13 +80,10 @@ impl ChangesStream {
     /// out, you would write:
     ///
     /// ```no_run
-    /// # extern crate serde_json;
-    /// # extern crate changes_stream;
-    /// # extern crate futures;
-    /// #
     /// # use changes_stream::ChangesStream;
     /// #
-    /// # fn main() {
+    /// # #[tokio::main]
+    /// # async fn main() {
     /// #   let url = "https://replicate.npmjs.com/_changes".to_string();
     /// #   let mut changes = ChangesStream::new(url);
     /// #
@@ -122,7 +99,7 @@ impl ChangesStream {
         self.handlers.push(Box::new(handler));
     }
 
-    /// Runs the `ChangesStream` struct's event loop, `lp`.
+    /// Runs the `ChangesStream` struct's event loop.
     ///
     /// Call this after you have regsitered all handlers using
     /// `on`.
@@ -132,13 +109,10 @@ impl ChangesStream {
     /// For example:
     ///
     /// ```no_run
-    /// # extern crate serde_json;
-    /// # extern crate changes_stream;
-    /// # extern crate futures;
-    /// #
     /// # use changes_stream::ChangesStream;
     /// #
-    /// # fn main() {
+    /// # #[tokio::main]
+    /// # async fn main() {
     /// #   let url = "https://replicate.npmjs.com/_changes".to_string();
     /// #   let mut changes = ChangesStream::new(url);
     /// #
@@ -150,75 +124,43 @@ impl ChangesStream {
     ///    changes.run();
     /// # }
     /// ```
-    pub fn run(mut self) {
-        let handle = self.lp.handle();
-        let client = Client::configure()
-            // 4 is number of threads to use for dns resolution
-            .connector(hyper_tls::HttpsConnector::new(4, &handle))
-            .build(&handle);
+    pub async fn run(self) {
+        let client = Client::builder().build::<_, Body>(HttpsConnector::new());
 
         let handlers = self.handlers;
-        self.lp
-            .run(client.get(self.db).and_then(move |res| {
-                assert!(res.status().is_success());
+        let mut res = client.get(self.db).await.unwrap();
+        assert!(res.status().is_success());
 
-                // Buffer up incomplete json lines.
-                let buffer: Vec<u8> = vec![];
-                let buffer_cell = RefCell::new(buffer);
+        // Buffer up incomplete json lines.
+        let buffer: Vec<u8> = vec![];
+        let buffer_cell = RefCell::new(buffer);
 
-                res.body().for_each(move |chunk| {
-                    if chunk.starts_with(PROLOGUE.as_bytes()) {
-                        return Ok(());
-                    }
-                    let mut source = chunk.to_vec();
-                    let mut borrowed = buffer_cell.borrow_mut();
-                    if borrowed.len() > 0 {
-                        source = [borrowed.clone(), chunk.to_vec()].concat();
-                        borrowed.clear();
-                    }
-                    if chunk.starts_with(DELIMITER.as_bytes()) {
-                        source = chunk[2..].to_vec();
-                    }
+        while let Some(Ok(chunk)) = res.body_mut().data().await {
+            if chunk.starts_with(PROLOGUE.as_bytes()) {
+                continue;
+            }
+            let mut source = chunk.to_vec();
+            let mut borrowed = buffer_cell.borrow_mut();
+            if borrowed.len() > 0 {
+                source = [borrowed.clone(), chunk.to_vec()].concat();
+                borrowed.clear();
+            }
+            if chunk.starts_with(DELIMITER.as_bytes()) {
+                source = chunk[2..].to_vec();
+            }
 
-                    match serde_json::from_slice(source.as_slice()) {
-                        Err(_) => {
-                            // We probably have an incomplete chunk of json. Buffer it & move on.
-                            borrowed.append(&mut chunk.to_vec());
-                        }
-                        Ok(json) => {
-                            let event: Event = json;
-                            for handler in &handlers {
-                                handler(&event);
-                            }
-                        }
-                    }
-                    Ok(())
-                })
-            }))
-            .unwrap();
-    }
-
-    pub fn run_with(self, mut lp: tokio_core::reactor::Core) {
-        let handle = self.lp.handle();
-        let client = Client::configure()
-            // 4 is number of threads to use for dns resolution
-            .connector(hyper_tls::HttpsConnector::new(4, &handle))
-            .build(&handle);
-
-        let handlers = self.handlers;
-        lp
-            .run(client.get(self.db).and_then(move |res| {
-                assert!(res.status().is_success());
-
-                res.body().for_each(move |chunk| {
-                    let event: Event = serde_json::from_slice(&chunk).unwrap();
+            match serde_json::from_slice(source.as_slice()) {
+                Err(_) => {
+                    // We probably have an incomplete chunk of json. Buffer it & move on.
+                    borrowed.append(&mut chunk.to_vec());
+                }
+                Ok(json) => {
+                    let event: Event = json;
                     for handler in &handlers {
                         handler(&event);
                     }
-                    Ok(())
-                })
-            }))
-            .unwrap();
-
+                }
+            }
+        }
     }
 }

@@ -1,19 +1,22 @@
 [package]
 name = "changes-stream"
 description = "couchdb follower"
-version = "0.1.0"
-authors = ["Ashley Williams <ashley666ashley@gmail.com>"]
+version = "0.2.0"
+authors = [
+    "Ashley Williams <ashley666ashley@gmail.com>",
+    "René Rössler <rene@freshx.de>",
+]
 license = "MIT"
+edition = "2018"
 
 [dependencies]
-futures = "0.1.10"
-tokio-core = "0.1.4"
-serde = "0.8"
-serde_json = "0.8"
-serde_derive = "0.8"
+tokio = "1.0"
+serde = "1.0"
+serde_json = "1.0"
+serde_derive = "1.0"
+hyper = { version = "0.14", features = ["client", "http1", "stream"] }
+hyper-tls = "0.5"
+tokio-native-tls = "0.3.0"
 
-[dependencies.hyper]
-git = "https://github.com/hyperium/hyper.git"
-
-[dependencies.hyper-tls]
-git = "https://github.com/hyperium/hyper-tls.git"
+[dev-dependencies]
+tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
