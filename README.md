@@ -5,7 +5,7 @@
 
 an implementation of [`changes-stream`](https://github.com/jcrugzz/changes-stream) in Rust.
 
-this code reads in a readable stream from an endpoint and returns each chunk in JSON.
+this code reads in a readable stream from an endpoint, parses each line and returns CouchDB changes events as defined in [lib/event.rs](/lib/event.rs).
 
 
 ## usage
@@ -20,15 +20,19 @@ changes-stream = "0.2"
 from [examples/follower.rs](/examples/follower.rs):
 
 ```rust
-use changes_stream::ChangesStream;
+use changes_stream::{ChangesStream, Event};
+use futures_util::stream::StreamExt;
 
 #[tokio::main]
 async fn main() {
-    let url = String::from("https://replicate.npmjs.com/_changes");
-    let mut changes = ChangesStream::new(url);
-    changes.on(|change| {
-        println!("{}: {}", change.seq, change.id);
-    });
-    changes.run().await;
+    let url = "https://replicate.npmjs.com/_changes".to_string();
+    let mut changes = ChangesStream::new(url).await.unwrap();
+    while let Some(event) = changes.next().await {
+        match event {
+            Ok(Event::Change(change)) => println!("Change ({}): {}", change.seq, change.id),
+            Ok(Event::Finished(finished)) => println!("Finished: {}", finished.last_seq),
+            Err(err) => println!("Error: {:?}", err),
+        }
+    }
 }
 ```
