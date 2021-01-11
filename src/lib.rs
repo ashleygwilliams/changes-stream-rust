@@ -15,7 +15,7 @@ pub struct ChangesStream {
     /// for incomplete line chunks
     buffer: Vec<u8>,
     /// Source of http chunks provided by reqwest
-    source: Pin<Box<dyn Stream<Item = reqwest::Result<Bytes>>>>,
+    source: Pin<Box<dyn Stream<Item = reqwest::Result<Bytes>> + Send>>,
 }
 
 impl ChangesStream {
