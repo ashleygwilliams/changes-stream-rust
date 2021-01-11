@@ -5,7 +5,9 @@ use bytes::Bytes;
 use futures_util::stream::Stream;
 use std::{pin::Pin, task::Poll};
 
+mod error;
 mod event;
+pub use error::Error;
 pub use event::Event;
 
 /// A structure which implements futures::Stream
@@ -32,33 +34,33 @@ impl ChangesStream {
     /// # #[tokio::main]
     /// # async fn main() {
     /// #     let url = "https://replicate.npmjs.com/_changes".to_string();
-    /// #     let mut changes = ChangesStream::new(url).await;
+    /// #     let mut changes = ChangesStream::new(url).await.unwrap();
     /// #     while let Some(event) = changes.next().await {
     /// #         match event {
-    /// #             Event::Change(change) => {
-    /// #                 println!("{}: {}", change.seq, change.id);
-    /// #             }
-    /// #             Event::Finished(finished) => {
-    /// #                 println!("Finished: {}", finished.last_seq);
-    /// #             }
+    /// #             Ok(Event::Change(change)) => println!("Change ({}): {}", change.seq, change.id),
+    /// #             Ok(Event::Finished(finished)) => println!("Finished: {}", finished.last_seq),
+    /// #             Err(err) => println!("Error: {:?}", err),
     /// #         }
     /// #     }
     /// # }
     /// ```
-    pub async fn new(db: String) -> ChangesStream {
-        let res = reqwest::get(&db).await.unwrap();
-        assert!(res.status().is_success());
+    pub async fn new(db: String) -> Result<ChangesStream, Error> {
+        let res = reqwest::get(&db).await.map_err(Error::RequestFailed)?;
+        let status = res.status();
+        if !status.is_success() {
+            return Err(Error::InvalidStatus(status));
+        }
         let source = Pin::new(Box::new(res.bytes_stream()));
 
-        ChangesStream {
+        Ok(ChangesStream {
             buffer: vec![],
             source,
-        }
+        })
     }
 }
 
 impl Stream for ChangesStream {
-    type Item = Event;
+    type Item = Result<Event, Error>;
 
     fn poll_next(
         mut self: std::pin::Pin<&mut Self>,
@@ -87,19 +89,19 @@ impl Stream for ChangesStream {
                     // 0x2C is ','
                     line.remove(line.len() - 1); // remove ,
                 }
-                match serde_json::from_slice(line.as_slice()) {
-                    Err(err) => {
-                        panic!(
-                            "Error: {:?} \"{}\"",
-                            err,
-                            std::str::from_utf8(line.as_slice()).unwrap()
-                        );
-                    }
+
+                let result = match serde_json::from_slice(line.as_slice()) {
+                    Err(err) => Err(Error::ParsingFailed(
+                        err,
+                        String::from_utf8(line).unwrap_or_default(),
+                    )),
                     Ok(json) => {
                         let event: Event = json;
-                        return Poll::Ready(Some(event));
+                        Ok(event)
                     }
-                }
+                };
+
+                return Poll::Ready(Some(result));
             } else {
                 match Stream::poll_next(self.source.as_mut(), cx) {
                     Poll::Pending => return Poll::Pending,
