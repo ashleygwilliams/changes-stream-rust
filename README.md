@@ -5,7 +5,7 @@
 
 an implementation of [`changes-stream`](https://github.com/jcrugzz/changes-stream) in Rust.
 
-this code reads in a readable stream from an endpoint, parses each line and returns CouchDB changes events as defined in [lib/event.rs](/lib/event.rs).
+this code reads in a readable stream from an endpoint, parses each line and returns CouchDB changes events as defined in [src/event.rs](/src/event.rs).
 
 
 ## usage
