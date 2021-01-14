@@ -8,7 +8,7 @@ use std::{pin::Pin, task::Poll};
 mod error;
 mod event;
 pub use error::Error;
-pub use event::Event;
+pub use event::{Change, ChangeEvent, Event, FinishedEvent};
 
 /// A structure which implements futures::Stream
 pub struct ChangesStream {
