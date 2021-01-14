@@ -24,7 +24,7 @@ pub struct ChangeEvent {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FinishedEvent {
     pub last_seq: Value,
-    pub pending: u64,
+    pub pending: Option<u64>, // not available on CouchDB 1.0
 }
 
 #[derive(Serialize, Deserialize, Debug)]
