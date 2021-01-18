@@ -1,5 +1,5 @@
 use serde_derive::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{Map, Value};
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(untagged)]
@@ -18,7 +18,7 @@ pub struct ChangeEvent {
     pub deleted: bool,
 
     #[serde(default)]
-    pub doc: Option<Value>,
+    pub doc: Option<Map<String, Value>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
