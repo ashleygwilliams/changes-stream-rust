@@ -3,6 +3,7 @@
 
 use bytes::Bytes;
 use futures_util::stream::Stream;
+use log::error;
 use std::{pin::Pin, task::Poll};
 
 mod error;
@@ -107,7 +108,10 @@ impl Stream for ChangesStream {
                     Poll::Pending => return Poll::Pending,
                     Poll::Ready(None) => return Poll::Ready(None),
                     Poll::Ready(Some(Ok(chunk))) => self.buffer.append(&mut chunk.to_vec()),
-                    Poll::Ready(Some(Err(err))) => panic!("Error getting next chunk: {:?}", err),
+                    Poll::Ready(Some(Err(err))) => {
+                        error!("Error getting next chunk: {:?}", err);
+                        return Poll::Ready(None);
+                    }
                 };
             }
         }
