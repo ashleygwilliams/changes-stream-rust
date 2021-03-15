@@ -29,7 +29,7 @@ impl ChangesStream {
     /// for the npmjs registry, you would write:
     ///
     /// ```no_run
-    /// # use changes_stream::{ChangesStream, Event};
+    /// # use changes_stream2::{ChangesStream, Event};
     /// # use futures_util::stream::StreamExt;
     /// #
     /// # #[tokio::main]

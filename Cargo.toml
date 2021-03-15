@@ -1,5 +1,5 @@
 [package]
-name = "changes-stream"
+name = "changes-stream2"
 description = "couchdb follower"
 version = "0.2.0"
 authors = [
