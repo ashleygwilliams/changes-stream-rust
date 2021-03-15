@@ -1,8 +1,10 @@
 # changes-stream-rust
 
-an implementation of [`changes-stream`](https://github.com/jcrugzz/changes-stream) in Rust.
+Fork of https://github.com/ashleygwilliams/changes-stream-rust / https://crates.io/crates/changes-stream.
 
-this code reads in a readable stream from an endpoint, parses each line and returns CouchDB changes events as defined in [src/event.rs](/src/event.rs).
+An implementation of [`changes-stream`](https://github.com/jcrugzz/changes-stream) in Rust.
+
+This code reads in a readable stream from an endpoint, parses each line and returns CouchDB changes events as defined in [src/event.rs](/src/event.rs).
 
 
 ## usage
