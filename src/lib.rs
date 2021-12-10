@@ -17,6 +17,8 @@ pub struct ChangesStream {
     buffer: Vec<u8>,
     /// Source of http chunks provided by reqwest
     source: Pin<Box<dyn Stream<Item = reqwest::Result<Bytes>> + Send>>,
+    /// Search pos for newline
+    newline_search_pos: usize,
 }
 
 impl ChangesStream {
@@ -56,6 +58,7 @@ impl ChangesStream {
         Ok(ChangesStream {
             buffer: vec![],
             source,
+            newline_search_pos: 0,
         })
     }
 }
@@ -71,11 +74,13 @@ impl Stream for ChangesStream {
             let line_break_pos = self
                 .buffer
                 .iter()
+                .skip(self.newline_search_pos)
                 .enumerate()
                 .find(|(_pos, b)| **b == 0x0A) // search for \n
-                .map(|(pos, _b)| pos);
+                .map(|(pos, _b)| self.newline_search_pos + pos);
             if let Some(line_break_pos) = line_break_pos {
                 let mut line = self.buffer.drain(0..=line_break_pos).collect::<Vec<_>>();
+                self.newline_search_pos = 0;
 
                 if line.len() < 15 {
                     // skip prologue, epilogue and empty lines (continuous mode)
@@ -104,6 +109,8 @@ impl Stream for ChangesStream {
 
                 return Poll::Ready(Some(result));
             } else {
+                self.newline_search_pos = self.buffer.len();
+
                 match Stream::poll_next(self.source.as_mut(), cx) {
                     Poll::Pending => return Poll::Pending,
                     Poll::Ready(None) => return Poll::Ready(None),
