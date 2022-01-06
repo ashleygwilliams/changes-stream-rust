@@ -1,20 +1,18 @@
-# changes-stream-rust
+# changes_stream2
 
-[![travis badge](https://travis-ci.org/ashleygwilliams/changes-stream-rust.svg?branch=master)](https://travis-ci.org/ashleygwilliams/changes-stream-rust)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](
+https://github.com/elwerene/changes-stream-rust/blob/master/LICENSE)
+[![Cargo](https://img.shields.io/crates/v/changes-stream2.svg)](
+https://crates.io/crates/changes-stream2)
+[![Documentation](https://docs.rs/changes-stream2/badge.svg)](
+https://docs.rs/changes-stream2)
 
+Fork of https://github.com/ashleygwilliams/changes-stream-rust / https://crates.io/crates/changes-stream.
 
-an implementation of [`changes-stream`](https://github.com/jcrugzz/changes-stream) in Rust.
+An implementation of [`changes-stream`](https://github.com/jcrugzz/changes-stream) in Rust.
 
-this code reads in a readable stream from an endpoint and returns each chunk in JSON.
+This code reads in a readable stream from an endpoint, parses each line and returns CouchDB changes events as defined in [src/event.rs](/src/event.rs).
 
-this code works off of the [`tokio` branch] of [`hyper`] to take advantage of new Rust Futures.
-
-[`tokio` branch]: https://github.com/hyperium/hyper/tree/tokio
-[`hyper`]: https:///crates.io/crates/hyper
-
-`changes-stream-rust` only works on nightly because it uses [`serde`].
-
-[`serde`]: https://crates.io/crates/serde
 
 ## usage
 
@@ -22,28 +20,25 @@ in your `Cargo.toml`:
 
 ```toml
 [dependencies]
-changes-stream = { git = "https://github.com/ashleygwilliams/changes-stream-rust.git" }
+changes-stream2 = "0.2"
 ```
 
 from [examples/follower.rs](/examples/follower.rs):
 
 ```rust
-extern crate changes_stream;
-extern crate futures;
+use changes_stream2::{ChangesStream, Event};
+use futures_util::stream::StreamExt;
 
-use std::io;
-use std::io::Write;
-
-use changes_stream::ChangesStream;
-
-fn main() {
+#[tokio::main]
+async fn main() {
     let url = "https://replicate.npmjs.com/_changes".to_string();
-    let mut changes = ChangesStream::new(url);
-
-    changes.on(|change| {
-        io::stdout().write_all(&change).unwrap();
-    });
-
-    changes.run();
+    let mut changes = ChangesStream::new(url).await.unwrap();
+    while let Some(event) = changes.next().await {
+        match event {
+            Ok(Event::Change(change)) => println!("Change ({}): {}", change.seq, change.id),
+            Ok(Event::Finished(finished)) => println!("Finished: {}", finished.last_seq),
+            Err(err) => println!("Error: {:?}", err),
+        }
+    }
 }
 ```

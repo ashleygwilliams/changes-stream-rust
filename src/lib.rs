@@ -1,46 +1,24 @@
-//! This is documentation for the `changes-stream` crate.
-//!
-//! The `changes-stream` crate is designed to give you a readable stream of
-//! chunked data, upon which you can register multiple handlers, that are
-//! called on Read of the data chunk.
+//! The `changes-stream` crate is designed to give you a
+//! futures::Stream of CouchDB changes stream events.
 
-#[macro_use]
-extern crate serde_derive;
+use bytes::Bytes;
+use futures_util::stream::Stream;
+use log::error;
+use std::{pin::Pin, task::Poll};
 
-extern crate serde;
-extern crate serde_json;
-extern crate futures;
-extern crate hyper;
-extern crate hyper_tls;
-extern crate tokio_core;
-
-use futures::Future;
-use futures::stream::Stream;
-use hyper::Client;
-use std::cell::RefCell;
-
+mod error;
 mod event;
-use event::Event;
+pub use error::Error;
+pub use event::{Change, ChangeEvent, Event, FinishedEvent};
 
-const DELIMITER: &'static str = ",\n";
-const PROLOGUE: &'static str = "{\"results\":[";
-
-/// A structure to generate a readable stream on which you can register handlers.
-///
-/// Internally, the `ChangesStream` struct holds 3 members:
-///
-/// | Member      | Type                                  | Notes                                                                   |
-/// |-------------|---------------------------------------|-------------------------------------------------------------------------|
-/// | `db`        | `String`                              | A url pointing to the data you'd like to stream.                        |
-/// | `lp`        | [`tokio_core::reactor::Core`]         | The event loop                                                          |
-/// | `handlers`  | `Vec<F> where F: Fn(&`[`hyper::Chunk`]`)` | A vector of handlers to be called on each Chunk from the Stream on Read |
-///
-/// [`tokio_core::reactor::Core`]: ../tokio_core/reactor/struct.Core.html
-/// [`hyper::Chunk`]: ../hyper/struct.Chunk.html
+/// A structure which implements futures::Stream
 pub struct ChangesStream {
-    db: hyper::Uri,
-    lp: tokio_core::reactor::Core,
-    handlers: Vec<Box<Fn(&Event)>>,
+    /// for incomplete line chunks
+    buffer: Vec<u8>,
+    /// Source of http chunks provided by reqwest
+    source: Pin<Box<dyn Stream<Item = reqwest::Result<Bytes>> + Send>>,
+    /// Search pos for newline
+    newline_search_pos: usize,
 }
 
 impl ChangesStream {
@@ -49,176 +27,100 @@ impl ChangesStream {
     /// Takes a single argument, `db`, which represents the
     /// url of the data you wish to stream.
     ///
-    /// Every `ChangesStream` struct is initialized with
-    /// an event loop ([`tokio_core::reactor::Core`]) and an
-    /// empty vector of handlers. See above for more details.
-    ///
-    /// [`tokio_core::reactor::Core`]: ../tokio_core/reactor/struct.Core.html
-    ///
     /// For example, to create a new `ChangesStream` struct
     /// for the npmjs registry, you would write:
     ///
     /// ```no_run
-    /// # extern crate serde_json;
-    /// # extern crate changes_stream;
-    /// # extern crate futures;
+    /// # use changes_stream2::{ChangesStream, Event};
+    /// # use futures_util::stream::StreamExt;
     /// #
-    /// #
-    /// # use changes_stream::ChangesStream;
-    /// #
-    /// # fn main() {
-    ///     let url = "https://replicate.npmjs.com/_changes".to_string();
-    ///     let mut changes = ChangesStream::new(url);
-    /// #
-    /// #   changes.on(|change| {
-    /// #       let data = serde_json::to_string(change).unwrap();
-    /// #       println!("{}", data);
-    /// #   });
-    /// #
-    /// #   changes.run();
+    /// # #[tokio::main]
+    /// # async fn main() {
+    /// #     let url = "https://replicate.npmjs.com/_changes".to_string();
+    /// #     let mut changes = ChangesStream::new(url).await.unwrap();
+    /// #     while let Some(event) = changes.next().await {
+    /// #         match event {
+    /// #             Ok(Event::Change(change)) => println!("Change ({}): {}", change.seq, change.id),
+    /// #             Ok(Event::Finished(finished)) => println!("Finished: {}", finished.last_seq),
+    /// #             Err(err) => println!("Error: {:?}", err),
+    /// #         }
+    /// #     }
     /// # }
     /// ```
-    pub fn new(db: String) -> ChangesStream {
-        ChangesStream {
-            db: db.parse().unwrap(),
-            lp: tokio_core::reactor::Core::new().unwrap(),
-            handlers: vec![],
+    pub async fn new(db: String) -> Result<ChangesStream, Error> {
+        let res = reqwest::get(&db).await.map_err(Error::RequestFailed)?;
+        let status = res.status();
+        if !status.is_success() {
+            return Err(Error::InvalidStatus(status));
         }
+        let source = Pin::new(Box::new(res.bytes_stream()));
+
+        Ok(ChangesStream {
+            buffer: vec![],
+            source,
+            newline_search_pos: 0,
+        })
     }
+}
 
-    /// Registers a handler. A handler is simply a function
-    /// you'd like to call on a chunk from the stream at the
-    /// time the chunk is read.
-    ///
-    /// `.on()` takes a single argument, a closure. The
-    /// closure you pass should take a single [`hyper::Chunk`]
-    /// as an argument.
-    ///
-    /// [`hyper::Chunk`]: ../hyper/struct.Chunk.html
-    ///
-    /// For example, to write the data in a chunk to standard
-    /// out, you would write:
-    ///
-    /// ```no_run
-    /// # extern crate serde_json;
-    /// # extern crate changes_stream;
-    /// # extern crate futures;
-    /// #
-    /// # use changes_stream::ChangesStream;
-    /// #
-    /// # fn main() {
-    /// #   let url = "https://replicate.npmjs.com/_changes".to_string();
-    /// #   let mut changes = ChangesStream::new(url);
-    /// #
-    ///    changes.on(|change| {
-    ///       let data = serde_json::to_string(change).unwrap();
-    ///       println!("{}", data);
-    ///    });
-    /// #
-    /// #   changes.run();
-    /// # }
-    /// ```
-    pub fn on<F: Fn(&Event) + 'static>(&mut self, handler: F) {
-        self.handlers.push(Box::new(handler));
-    }
+impl Stream for ChangesStream {
+    type Item = Result<Event, Error>;
 
-    /// Runs the `ChangesStream` struct's event loop, `lp`.
-    ///
-    /// Call this after you have regsitered all handlers using
-    /// `on`.
-    ///
-    /// Takes no arguments.
-    ///
-    /// For example:
-    ///
-    /// ```no_run
-    /// # extern crate serde_json;
-    /// # extern crate changes_stream;
-    /// # extern crate futures;
-    /// #
-    /// # use changes_stream::ChangesStream;
-    /// #
-    /// # fn main() {
-    /// #   let url = "https://replicate.npmjs.com/_changes".to_string();
-    /// #   let mut changes = ChangesStream::new(url);
-    /// #
-    /// #   changes.on(|change| {
-    /// #       let data = serde_json::to_string(change).unwrap();
-    /// #       println!("{}", data);
-    /// #   });
-    /// #
-    ///    changes.run();
-    /// # }
-    /// ```
-    pub fn run(mut self) {
-        let handle = self.lp.handle();
-        let client = Client::configure()
-            // 4 is number of threads to use for dns resolution
-            .connector(hyper_tls::HttpsConnector::new(4, &handle))
-            .build(&handle);
+    fn poll_next(
+        mut self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Option<Self::Item>> {
+        loop {
+            let line_break_pos = self
+                .buffer
+                .iter()
+                .skip(self.newline_search_pos)
+                .enumerate()
+                .find(|(_pos, b)| **b == 0x0A) // search for \n
+                .map(|(pos, _b)| self.newline_search_pos + pos);
+            if let Some(line_break_pos) = line_break_pos {
+                let mut line = self.buffer.drain(0..=line_break_pos).collect::<Vec<_>>();
+                self.newline_search_pos = 0;
 
-        let handlers = self.handlers;
-        self.lp
-            .run(client.get(self.db).and_then(move |res| {
-                assert!(res.status().is_success());
+                if line.len() < 15 {
+                    // skip prologue, epilogue and empty lines (continuous mode)
+                    continue;
+                }
+                line.remove(line.len() - 1); // remove \n
+                if line[line.len() - 1] == 0x0D {
+                    // 0x0D is '\r'. CouchDB >= 2.0 sends "\r\n"
+                    line.remove(line.len() - 1);
+                }
+                if line[line.len() - 1] == 0x2C {
+                    // 0x2C is ','
+                    line.remove(line.len() - 1); // remove ,
+                }
 
-                // Buffer up incomplete json lines.
-                let buffer: Vec<u8> = vec![];
-                let buffer_cell = RefCell::new(buffer);
-
-                res.body().for_each(move |chunk| {
-                    if chunk.starts_with(PROLOGUE.as_bytes()) {
-                        return Ok(());
+                let result = match serde_json::from_slice(line.as_slice()) {
+                    Err(err) => Err(Error::ParsingFailed(
+                        err,
+                        String::from_utf8(line).unwrap_or_default(),
+                    )),
+                    Ok(json) => {
+                        let event: Event = json;
+                        Ok(event)
                     }
-                    let mut source = chunk.to_vec();
-                    let mut borrowed = buffer_cell.borrow_mut();
-                    if borrowed.len() > 0 {
-                        source = [borrowed.clone(), chunk.to_vec()].concat();
-                        borrowed.clear();
+                };
+
+                return Poll::Ready(Some(result));
+            } else {
+                self.newline_search_pos = self.buffer.len();
+
+                match Stream::poll_next(self.source.as_mut(), cx) {
+                    Poll::Pending => return Poll::Pending,
+                    Poll::Ready(None) => return Poll::Ready(None),
+                    Poll::Ready(Some(Ok(chunk))) => self.buffer.append(&mut chunk.to_vec()),
+                    Poll::Ready(Some(Err(err))) => {
+                        error!("Error getting next chunk: {:?}", err);
+                        return Poll::Ready(None);
                     }
-                    if chunk.starts_with(DELIMITER.as_bytes()) {
-                        source = chunk[2..].to_vec();
-                    }
-
-                    match serde_json::from_slice(source.as_slice()) {
-                        Err(_) => {
-                            // We probably have an incomplete chunk of json. Buffer it & move on.
-                            borrowed.append(&mut chunk.to_vec());
-                        }
-                        Ok(json) => {
-                            let event: Event = json;
-                            for handler in &handlers {
-                                handler(&event);
-                            }
-                        }
-                    }
-                    Ok(())
-                })
-            }))
-            .unwrap();
-    }
-
-    pub fn run_with(self, mut lp: tokio_core::reactor::Core) {
-        let handle = self.lp.handle();
-        let client = Client::configure()
-            // 4 is number of threads to use for dns resolution
-            .connector(hyper_tls::HttpsConnector::new(4, &handle))
-            .build(&handle);
-
-        let handlers = self.handlers;
-        lp
-            .run(client.get(self.db).and_then(move |res| {
-                assert!(res.status().is_success());
-
-                res.body().for_each(move |chunk| {
-                    let event: Event = serde_json::from_slice(&chunk).unwrap();
-                    for handler in &handlers {
-                        handler(&event);
-                    }
-                    Ok(())
-                })
-            }))
-            .unwrap();
-
+                };
+            }
+        }
     }
 }
