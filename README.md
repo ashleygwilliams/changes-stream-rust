@@ -1,4 +1,11 @@
-# changes-stream-rust
+# changes_stream2
+
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](
+https://github.com/elwerene/changes-stream-rust/blob/master/LICENSE)
+[![Cargo](https://img.shields.io/crates/v/changes-stream2.svg)](
+https://crates.io/crates/changes-stream2)
+[![Documentation](https://docs.rs/changes-stream2/badge.svg)](
+https://docs.rs/changes-stream2)
 
 Fork of https://github.com/ashleygwilliams/changes-stream-rust / https://crates.io/crates/changes-stream.
 
