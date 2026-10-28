@@ -1,14 +1,15 @@
-extern crate serde_json;
-extern crate changes_stream;
-extern crate futures;
+use changes_stream2::{ChangesStream, Event};
+use futures_util::stream::StreamExt;
 
-use changes_stream::ChangesStream;
-
-fn main() {
-    let url = String::from("https://replicate.npmjs.com/_changes");
-    let mut changes = ChangesStream::new(url);
-    changes.on(|change| {
-        println!("{}: {}", change.seq, change.id);
-    });
-    changes.run();
+#[tokio::main]
+async fn main() {
+    let url = "https://replicate.npmjs.com/_changes".to_string();
+    let mut changes = ChangesStream::new(url).await.unwrap();
+    while let Some(event) = changes.next().await {
+        match event {
+            Ok(Event::Change(change)) => println!("Change ({}): {}", change.seq, change.id),
+            Ok(Event::Finished(finished)) => println!("Finished: {}", finished.last_seq),
+            Err(err) => println!("Error: {:?}", err),
+        }
+    }
 }

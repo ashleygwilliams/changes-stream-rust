@@ -1,19 +1,41 @@
 [package]
-name = "changes-stream"
+name = "changes-stream2"
 description = "couchdb follower"
-version = "0.1.0"
-authors = ["Ashley Williams <ashley666ashley@gmail.com>"]
+version = "0.2.22"
+authors = [
+    "Ashley Williams <ashley666ashley@gmail.com>",
+    "René Rössler <rene@freshx.de>",
+]
+repository = "https://github.com/elwerene/changes-stream-rust.git"
 license = "MIT"
+edition = "2024"
+rust-version = "1.85"
 
 [dependencies]
-futures = "0.1.10"
-tokio-core = "0.1.4"
-serde = "0.8"
-serde_json = "0.8"
-serde_derive = "0.8"
+bytes = "1"
+futures-util = "0.3"
+metrics = { version = "0.24", optional = true }
+reqwest = { version = "0.13", default-features = false, features = [
+    "stream",
+    "json",
+] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+url = "2"
 
-[dependencies.hyper]
-git = "https://github.com/hyperium/hyper.git"
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 
-[dependencies.hyper-tls]
-git = "https://github.com/hyperium/hyper-tls.git"
+[features]
+default = ["native-tls"]
+
+# change.doc as serde_json::value::RawValue
+raw_value_doc = ["serde_json/raw_value"]
+
+# metrics
+metrics = ["dep:metrics"]
+
+# tls library selection
+native-tls = ["reqwest/native-tls"]
+rustls-tls = ["reqwest/rustls"]
